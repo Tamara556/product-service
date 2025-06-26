@@ -1,6 +1,5 @@
 package com.progtechie.product_service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.progtechie.product_service.dto.ProductRequest;
 import com.progtechie.product_service.repository.ProductRepository;
@@ -13,7 +12,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -31,6 +29,17 @@ class ProductServiceApplicationTests {
     @Container
     static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:4.4.2");
 
+    // Force start to avoid "Prematurely reached end of stream"
+    static {
+        mongoDBContainer.start();
+    }
+
+    @DynamicPropertySource
+    static void setProperties(DynamicPropertyRegistry registry) {
+        String uri = mongoDBContainer.getReplicaSetUrl();
+        registry.add("spring.data.mongodb.uri", () -> uri);
+    }
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -40,20 +49,17 @@ class ProductServiceApplicationTests {
     @Autowired
     private ProductRepository productRepository;
 
-    @DynamicPropertySource
-    static void setProperties(DynamicPropertyRegistry dynamicPropertyRegistry) {
-        dynamicPropertyRegistry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-    }
-
     @Test
     void shouldCreateProduct() throws Exception {
         ProductRequest productRequest = getProductRequest();
         String productRequestString = objectMapper.writeValueAsString(productRequest);
+
         mockMvc.perform(MockMvcRequestBuilders.post("/api/product")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(productRequestString)
                 )
                 .andExpect(status().isCreated());
+
         Assertions.assertEquals(1, productRepository.findAll().size());
     }
 
@@ -64,5 +70,4 @@ class ProductServiceApplicationTests {
                 .price(BigDecimal.valueOf(1200))
                 .build();
     }
-
 }
