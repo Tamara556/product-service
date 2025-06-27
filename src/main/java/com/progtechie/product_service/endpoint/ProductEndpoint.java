@@ -2,6 +2,7 @@ package com.progtechie.product_service.endpoint;
 
 import com.progtechie.product_service.dto.ProductRequest;
 import com.progtechie.product_service.dto.ProductResponse;
+import com.progtechie.product_service.model.Product;
 import com.progtechie.product_service.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,16 +19,15 @@ public class ProductEndpoint {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void createProduct(@RequestBody ProductRequest productRequest){
-        productService.createProduct(productRequest);
+    public ProductResponse createProduct(@RequestBody ProductRequest productRequest) {
+        return productService.createProduct(productRequest);
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<ProductResponse> getAllProducts(){
+    public List<ProductResponse> getAllProducts() {
         return productService.getAllProducts();
     }
-
 
 
 }
