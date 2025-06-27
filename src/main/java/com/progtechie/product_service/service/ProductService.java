@@ -17,27 +17,33 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    public void createProduct(ProductRequest productRequest) {
+    public ProductResponse createProduct(ProductRequest productRequest) {
         Product product = Product.builder()
-                .name(productRequest.getName())
-                .description(productRequest.getDescription())
-                .price(productRequest.getPrice())
+                .name(productRequest.name())
+                .description(productRequest.description())
+                .price(productRequest.price())
                 .build();
-        productRepository.save(product);
-        log.info("Product {} created", product.getId());
+
+        product = productRepository.save(product);
+
+        log.info("Product [{}] created", product.getId());
+
+        return mapToResponse(product);
     }
 
     public List<ProductResponse> getAllProducts() {
-        List<Product> products = productRepository.findAll();
-        return products.stream().map(this::mapToProductResponse).toList();
+        return productRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
-    private ProductResponse mapToProductResponse(Product product) {
-        return ProductResponse.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .description(product.getDescription())
-                .price(product.getPrice())
-                .build();
+    private ProductResponse mapToResponse(Product product) {
+        return new ProductResponse(
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice()
+        );
     }
 }
